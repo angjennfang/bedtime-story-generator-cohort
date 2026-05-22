@@ -30,16 +30,42 @@ The frontend's `BACKEND_URL` constant in `frontend/script.js` ships as `"http://
 
 ## Deploy to production
 
+> **This section is the in-context summary.** For click-by-click with screenshots, exact button labels, and the full common-gotchas table, keep `deploy_guide.pdf` (sent by your instructor during class) open while you work through Phases 0–4 below.
+
+### 0. Push your bedtime app to YOUR GitHub (~5 minutes)
+
+Render and Vercel deploy by **reading from a GitHub repo they have access to** — typically a repo in your own GitHub account. Your local cohort clone lives on the instructor's GitHub, not yours, so you push the code to your own GitHub first. Two clean paths — pick whichever feels natural:
+
+- **Path A (simplest)** — fork the cohort repo and push to your fork:
+  ```bash
+  # from the cohort repo root:
+  gh auth login        # one-time per machine; HTTPS + browser login is fine
+  gh repo fork --remote-name=origin --clone=false
+  git push -u origin main
+  ```
+  *WSL2 students:* `gh auth login`'s browser-open sometimes doesn't bridge from WSL — if it doesn't, paste the device-flow URL the terminal prints into your Windows browser manually.
+
+- **Path B (clean history)** — fresh `git init` + new repo:
+  ```bash
+  rm -rf .git
+  git init && git branch -M main
+  git add . && git commit -m "Initial deploy of my bedtime story app"
+  gh auth login
+  gh repo create <your-repo-name> --public --source=. --remote=origin --push
+  ```
+
+**Verify before Phase 1:** `gh repo view --web` opens your repo in the browser. The page must show your code under *your* GitHub username — Render and Vercel will only see repos *you* own when they ask you to pick from a list.
+
 ### 1. Render backend + managed Postgres
 
 - Sign in to <https://render.com>. *New → Blueprint*. Connect your GitHub repo.
 - Render reads `render.yaml` and provisions both the web service (`bedtime-story-api`) and the managed Postgres database (`bedtime-story-db`). `DATABASE_URL` is auto-wired.
 - After the first deploy completes, go to the service's *Environment* tab and set `GEMINI_API_KEY` to your Google AI Studio key. (Marked `sync: false` in `render.yaml` so it's not committed.)
-- Apply the schema migration once. From the Render dashboard, open the database's *Connect → External shell* and run:
+- Apply the schema migration once. In the Render dashboard, click your `bedtime-story-db` card → **Connect** → copy the **External Database URL** (reachable from your laptop; the password is embedded — treat it like an API key). Then from your local terminal:
   ```bash
-  psql "$DATABASE_URL" -f sql/002_create_stories.sql
+  psql "<paste-the-External-Database-URL-here>" -f sql/002_create_stories.sql
   ```
-  (Or copy the file contents into the SQL editor.)
+  Expected output: `DROP TABLE`, `CREATE TABLE`, `CREATE INDEX`. (If the dashboard shows an in-browser SQL shell instead, that works too — copy the contents of `sql/002_create_stories.sql` into it.)
 - Note your service's URL — looks like `https://bedtime-story-api.onrender.com`.
 
 ### 2. Vercel frontend
@@ -58,7 +84,7 @@ with:
 ```javascript
 const BACKEND_URL = "https://bedtime-story-api.onrender.com";  // your Render URL
 ```
-Commit. Vercel auto-redeploys.
+Commit and push. Vercel auto-redeploys in ~30 seconds, baking the new URL into the static JS that hits the browser.
 
 ### 4. Verify
 
