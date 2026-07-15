@@ -2,6 +2,7 @@
 //   const BACKEND_URL = "https://bedtime-story-api.onrender.com";
 // For local development: keep "http://localhost:8000" and run uvicorn locally.
 const BACKEND_URL = "https://bedtime-story-api-spt9.onrender.com";
+//const BACKEND_URL = "http://localhost:8000";
 
 function escapeHtml(s) {
     return s.replace(/[&<>"']/g, c => ({
